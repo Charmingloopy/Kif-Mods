@@ -12,7 +12,7 @@ If you encounter a bug in the game,  first make sure it is not one of your mods 
 
 If you encounter any bugs or errors please let me know on discord (my username is charmingloopy).
 
+# Mod descriptions 
 
-Mods:
-
-Magnitude Rework - if the size of the magnitude is equal to or higher then 8 then stealth rocks are added to the enemies side.
+## Magnitude Rework mod
+if the size of the magnitude is equal to or higher then 8 then stealth rocks are added to the enemies side.
