@@ -21,7 +21,7 @@ Reworks Magnitude so that if the size of the magnitude is equal to or higher the
 ## Bide Rework Mod
 Reworks Bide making it raise the users defense by 1 stage then decrease it by 1 stage when the user has finished biding.
 
-# ability reworks:
+# Ability reworks:
 
 ## Stall Rework Mod
 Reworks Stall so that in a addition of the pokemon with this ability always moving lasts the damage of their attacks are multiplied by 1.5 - idea from https://www.reddit.com/r/pokemon/comments/14ug713/comment/jra6ua3/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
