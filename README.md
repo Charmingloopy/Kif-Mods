@@ -14,5 +14,8 @@ If you encounter any bugs or errors please let me know on discord (my username i
 
 # Mod descriptions 
 
-## Magnitude Rework mod
-if the size of the magnitude is equal to or higher then 8 then stealth rocks are added to the enemies side.
+## Magnitude Rework Mod
+Reworks Magnitude so that if the size of the magnitude is equal to or higher then 8 then stealth rocks are added to the targets side.
+
+## Bide Rework Mod
+Reworks Bide making it raise the users defence by 1 stage then decrease it by 1 stage when the user has finished biding.
