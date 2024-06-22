@@ -14,6 +14,10 @@ If you encounter any bugs or errors please let me know on discord (my username i
 
 # Mod descriptions 
 
+
+## Averaged Evolution Levels:
+Averages / increases the level gap between the Evolution's of fusions that are very close to each other
+
 # Move reworks:
 ## Magnitude Rework Mod
 Reworks Magnitude so that if the size of the magnitude is equal to or higher then 8 then stealth rocks are added to the targets side.
