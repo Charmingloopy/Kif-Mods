@@ -94,9 +94,9 @@ class RandomizerTrainerOptionsScene < PokemonOption_Scene
      
        # }, "replace either the body or head with this pokemon."
        # )
-        #return options
-      #end
-#end
+        return options
+      end
+end
 
 
 
