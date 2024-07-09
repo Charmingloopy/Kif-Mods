@@ -73,7 +73,7 @@ class RandomizerTrainerOptionsScene < PokemonOption_Scene
                                     $game_switches[RANDOM_TEAMS_CUSTOM_SPRITES] = value == 0
                                   },
                                   "Use only Pokémon that have custom sprites in trainer teams"
-    #    )
+       )
     #    options << SliderOption.new(_INTL("Fusing Trainer pokemon with",), 0, 470, 1,
    #     proc { $game_variables[LOLPY_FUSEMON_ID_TRAINER] },
      #   proc { |value|
