@@ -1,4 +1,4 @@
-How to add .rb mods:
+## How to add .rb mods:
 
 The Kuray PIF Revamp offers the ability to add your own mods to the game.  To do that safely, continue reading.
 
