@@ -26,10 +26,10 @@ def get_randomized_bst_hash(poke_list, bst_range,show_progress=true)
             fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
             if fusepoke_id >= 1
                 if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2
-                 random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_head_id)
+                 random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_id)
                  end
                 if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 1
-                 random_poke = getFusedPokemonIdFromDexNum(fusepoke_body_id,random_poke)
+                 random_poke = getFusedPokemonIdFromDexNum(fusepoke_id,random_poke)
                  end
                 if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 0
                     if rand(1) < 0.5 then
