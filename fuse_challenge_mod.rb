@@ -46,11 +46,12 @@ def get_randomized_bst_hash(poke_list, bst_range,show_progress=true,randomize = 
               
               while poketype != true and tries > 0
                 puts types
-                pokes = Pokemon.new(poke_list.sample,10)
+                mon = poke_list.sample
+                pokes = Pokemon.new(mon,10)
                 tries -= 1
                 if pokes.hasType?(types[fusepoke_type - 1])
                   poketype = true
-                  fusepoke_id = pokes.id
+                  fusepoke_id = mon
                 end
               end
             end
