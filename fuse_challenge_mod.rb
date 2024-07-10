@@ -1,3 +1,4 @@
+LOLPY_FUSEMON_TYPE = 421
 SWITCH_LOLPY_CHALLENGES = 422
 LOLPY_FUSEMON_ID_TRAINER = 422
 LOLPY_FUSEMON_CHOICE_ID_TRAINER = 423
@@ -35,7 +36,25 @@ def get_randomized_bst_hash(poke_list, bst_range,show_progress=true,randomize = 
               random_poke = i
             end
             newpoke = Pokemon.new(i,10)
+            fusepoke_type = $game_variables[LOLPY_FUSEMON_TYPE]
             fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
+            if fusepoke_type > 0
+              poketype = false
+              tries = 100
+
+              types = [:NORMAL,:FIGHTING,:FLYING,:POISON,:GROUND,:ROCK,:BUG,:GHOST,:STEEL,:FIRE,:WATER,:GRASS,:ELECTRIC,:PSYCHIC,:ICE,:DRAGON,:DARK,:FAIRY]
+              
+              while poketype != true and tries > 0
+                puts types
+                pokes = Pokemon.new(poke_list.sample,10)
+                tries -= 1
+                if pokes.hasType?(types[fusepoke_type - 1])
+                  poketype = true
+                  fusepoke_id = pokes.id
+                end
+              end
+            end
+                
             if fusepoke_id >= 1 && !$game_switches[REGULAR_TO_FUSIONS]
                 if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2 && !isFusion(i)
                  random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_id)
@@ -73,13 +92,21 @@ def get_randomized_bst_hash(poke_list, bst_range,show_progress=true,randomize = 
 class Loopy_Chalmod_OptionsScene < PokemonOption_Scene
   def pbGetOptions(inloadscreen = false)
     options = [
-      SliderOption.new(_INTL("Fusing Wild pokemon with",), 0, 470, 1,
+      SliderOption.new(_INTL("Type challenge",), 0, 18, 1,
+      proc { $game_variables[LOLPY_FUSEMON_TYPE] },
+      proc { |value|
+      $game_variables[LOLPY_FUSEMON_TYPE]=value
+      
+      
+    }, "fuse wild pokemon with a pokemon that has this type."
+    ),
+      SliderOption.new(_INTL("Id challenge",), 0, 470, 1,
         proc { $game_variables[LOLPY_FUSEMON_ID] },
         proc { |value|
         $game_variables[LOLPY_FUSEMON_ID]=value
         
         
-      }, "fuse all wild pokemon with the pokemon that has this id, 0 disables this."
+      }, "fuse wild pokemon with the id."
       ),
 
       EnumOption.new(_INTL("What part to replace",), [_INTL("Random"), _INTL("Body"),_INTL("Head")],
@@ -264,7 +291,28 @@ end
 
 def pbGenerateWildPokemon(species,level,isRoamer=false)
   newpoke = Pokemon.new(species,10)
+  poke_list = get_pokemon_list(false)
   fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
+  fusepoke_type = $game_variables[LOLPY_FUSEMON_TYPE]
+  if fusepoke_type > 0
+    poketype = false
+
+    tries = 100
+
+    types = [:NORMAL,:FIGHTING,:FLYING,:POISON,:GROUND,:ROCK,:BUG,:GHOST,:STEEL,:FIRE,:WATER,:GRASS,:ELECTRIC,:PSYCHIC,:ICE,:DRAGON,:DARK,:FAIRY]
+    #types.sort! { |a, b| GameData::Type.get(a).id_number <=> GameData::Type.get(b).id_number }
+    puts types.inspect
+    while poketype != true and tries > 0
+      
+      mon = poke_list.sample
+      pokes = Pokemon.new(mon,10)
+      tries -= 1
+      if pokes.hasType?(types[fusepoke_type - 1])
+        poketype = true
+        fusepoke_id = mon
+        end
+     end
+   end
   if fusepoke_id >= 1 && !$game_switches[REGULAR_TO_FUSIONS]
       if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2 && !isFusion(getDexNumberForSpecies(species))
       species = getSpeciesIdForFusion(getDexNumberForSpecies(species), fusepoke_id)
