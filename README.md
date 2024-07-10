@@ -19,7 +19,7 @@ Averages / increases the level gap between the Evolution's of fusions that are v
 
 ## Wild Fusion challenge mod:
 
-adds a option to randomizer allowing you to pick a pokemon to be fused with all wild encounters. the id of the pokemon can be obtained by typing dex "pokemon name" in bot help on the pif discord
+adds a option to randomizer options allowing you to pick a pokemon to be fused with all wild encounters, you can pick a type instead and the pokemon to be fused will be a random pokemon with that type. the id of the pokemon can be obtained by typing dex "pokemon name" in bot help on the pif discord. you dont need to randomize for this mod to work. enabling fuse everything in wild pokemon randomizer settings will disable this mod
 
 # Move reworks:
 ## Magnitude Rework Mod:
