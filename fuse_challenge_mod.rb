@@ -1,10 +1,11 @@
-
+SWITCH_LOLPY_CHALLENGES = 422
 LOLPY_FUSEMON_ID_TRAINER = 422
 LOLPY_FUSEMON_CHOICE_ID_TRAINER = 423
 LOLPY_FUSEMON_ID = 424
 LOLPY_FUSEMON_CHOICE_ID = 425
+REGULAR_TO_FUSIONS = 953
+def get_randomized_bst_hash(poke_list, bst_range,show_progress=true,randomize = true)
 
-def get_randomized_bst_hash(poke_list, bst_range,show_progress=true)
         bst_hash = Hash.new
         for i in 1..NB_POKEMON - 1
           show_shuffle_progress(i) if show_progress
@@ -15,29 +16,41 @@ def get_randomized_bst_hash(poke_list, bst_range,show_progress=true)
           targetStats_min = statsTotal - bst_range
           max_bst_allowed=targetStats_max
           min_bst_allowed=targetStats_min
-          #if a match, add to hash, remove from array, and cycle to next poke in dex
+          if randomize == false
+           random_poke = i
+          end
+          #if a match, add to hash, remove from array, && cycle to next poke in dex
           playShuffleSE(i)
-          random_poke = poke_list.sample
+          if randomize == true
+           random_poke = poke_list.sample
+          end
           random_poke_bst=getStatsTotal(getBaseStatsFormattedForRandomizer(random_poke))
+          
           j=0
           while(random_poke_bst <= min_bst_allowed || random_poke_bst >= max_bst_allowed)
-            random_poke = poke_list.sample
-            random_poke_bst=getStatsTotal(getBaseStatsFormattedForRandomizer(random_poke))
+            if randomize == true
+             random_poke = poke_list.sample
+             random_poke_bst=getStatsTotal(getBaseStatsFormattedForRandomizer(random_poke))
+            else
+              random_poke = i
+            end
+            newpoke = Pokemon.new(i,10)
             fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
-            if fusepoke_id >= 1
-                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2
+            if fusepoke_id >= 1 && !$game_switches[REGULAR_TO_FUSIONS]
+                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2 && !isFusion(i)
                  random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_id)
                  end
-                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 1
+                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 1 && !isFusion(i)
                  random_poke = getFusedPokemonIdFromDexNum(fusepoke_id,random_poke)
                  end
-                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 0
+                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 0 && !isFusion(i)
                     if rand(1) < 0.5 then
 
                       random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_id)
                     else
                       random_poke = getFusedPokemonIdFromDexNum(fusepoke_id,random_poke)
                       end
+
                 end
 
             j+=1
@@ -57,50 +70,121 @@ def get_randomized_bst_hash(poke_list, bst_range,show_progress=true)
 
 
 
-class RandomizerTrainerOptionsScene < PokemonOption_Scene
- def pbGetOptions(inloadscreen = false)
-        options = []
-        if !$game_switches[SWITCH_DURING_INTRO]
-          options << SliderOption.new(_INTL("Randomness degree"), 25, 500, 5,
-                                      proc { $game_variables[VAR_RANDOMIZER_TRAINER_BST] },
-                                      proc { |value|
-                                        $game_variables[VAR_RANDOMIZER_TRAINER_BST] = value
-                                      })
+class Loopy_Chalmod_OptionsScene < PokemonOption_Scene
+  def pbGetOptions(inloadscreen = false)
+    options = [
+      SliderOption.new(_INTL("Fusing Wild pokemon with",), 0, 470, 1,
+        proc { $game_variables[LOLPY_FUSEMON_ID] },
+        proc { |value|
+        $game_variables[LOLPY_FUSEMON_ID]=value
+        
+        
+      }, "fuse all wild pokemon with the pokemon that has this id, 0 disables this."
+      ),
+
+      EnumOption.new(_INTL("What part to replace",), [_INTL("Random"), _INTL("Body"),_INTL("Head")],
+        proc { $game_variables[LOLPY_FUSEMON_CHOICE_ID] },
+        proc { |value|
+        $game_variables[LOLPY_FUSEMON_CHOICE_ID]=value
+        }, "replace either the body or head with this pokemon."
+      ),
+
+    ]
+    return options
+   end
+ end
+class RandomizerOptionsScene < PokemonOption_Scene
+  def initialize
+    super
+    @openTrainerOptions = false
+    @openWildOptions = false
+    @openGymOptions = false
+    @openItemOptions = false
+    $game_switches[SWITCH_RANDOMIZED_AT_LEAST_ONCE] = true
+  end
+
+  def getDefaultDescription
+    return _INTL("Set the randomizer settings")
+  end
+
+  def pbStartScene(inloadscreen = false)
+    super
+    @changedColor = true
+    @sprites["title"] = Window_UnformattedTextPokemon.newWithSize(
+      _INTL("Randomizer settings"), 0, 0, Graphics.width, 64, @viewport)
+    @sprites["textbox"].text = getDefaultDescription
+    pbFadeInAndShow(@sprites) { pbUpdate }
+  end
+
+  def pbGetOptions(inloadscreen = false)
+    options = [
+      EnumOption.new(_INTL("Pokémon"), [_INTL("On"), _INTL("Off")],
+                     proc {
+                       $game_switches[SWITCH_RANDOM_WILD] ? 0 : 1
+                     },
+                     proc { |value|
+                       if !$game_switches[SWITCH_RANDOM_WILD] && value == 0
+                         @openWildOptions = true
+                         openWildPokemonOptionsMenu()
+                       end
+                       $game_switches[SWITCH_RANDOM_WILD] = value == 0
+                     }, "Select the randomizer options for Pokémon"
+      ),
+      EnumOption.new(_INTL("NPC Trainers"), [_INTL("On"), _INTL("Off")],
+                     proc { $game_switches[SWITCH_RANDOM_TRAINERS] ? 0 : 1 },
+                     proc { |value|
+                       if !$game_switches[SWITCH_RANDOM_TRAINERS] && value == 0
+                         @openTrainerOptions = true
+                         openTrainerOptionsMenu()
+                       end
+                       $game_switches[SWITCH_RANDOM_TRAINERS] = value == 0
+                     }, "Select the randomizer options for trainers"
+      ),
+
+      EnumOption.new(_INTL("Gym trainers"), [_INTL("On"), _INTL("Off")],
+                     proc { $game_switches[SWITCH_RANDOMIZE_GYMS_SEPARATELY] ? 0 : 1 },
+                     proc { |value|
+                       if !$game_switches[SWITCH_RANDOMIZE_GYMS_SEPARATELY] && value == 0
+                         @openGymOptions = true
+                         openGymOptionsMenu()
+                       end
+                       $game_switches[SWITCH_RANDOMIZE_GYMS_SEPARATELY] = value == 0
+                     }, "Limit gym trainers to a single type"
+      ),
+
+      EnumOption.new(_INTL("Items"), [_INTL("On"), _INTL("Off")],
+                     proc { $game_switches[SWITCH_RANDOM_ITEMS_GENERAL] ? 0 : 1 },
+                     proc { |value|
+                       if !$game_switches[SWITCH_RANDOM_ITEMS_GENERAL] && value == 0
+                         @openItemOptions = true
+                         openItemOptionsMenu()
+                       end
+                       $game_switches[SWITCH_RANDOM_ITEMS_GENERAL] = value == 0
+                     }, "Select the randomizer options for items"
+      ),
+      EnumOption.new(_INTL("Loopy's challenges"), [_INTL("On"), _INTL("Off")],
+      proc { $game_switches[SWITCH_LOLPY_CHALLENGES] ? 0 : 1 },
+      proc { |value|
+        if !$game_switches[SWITCH_LOLPY_CHALLENGES] && value == 0
+          @openLoopchalOptions = true
+          openLoopChallengeOptionsMenu()
         end
-        options << EnumOption.new(_INTL("Custom Sprites only"), [_INTL("On"), _INTL("Off")],
-                                  proc { $game_switches[RANDOM_TEAMS_CUSTOM_SPRITES] ? 0 : 1 },
-                                  proc { |value|
-                                    $game_switches[RANDOM_TEAMS_CUSTOM_SPRITES] = value == 0
-                                  },
-                                  "Use only Pokémon that have custom sprites in trainer teams"
-       )
-    #    options << SliderOption.new(_INTL("Fusing Trainer pokemon with",), 0, 470, 1,
-   #     proc { $game_variables[LOLPY_FUSEMON_ID_TRAINER] },
-     #   proc { |value|
-     #   $game_variables[LOLPY_FUSEMON_ID_TRAINER]=value
-     #    if value > 0
-     #      @newpokes = Pokemon.new($game_variables[LOLPY_FUSEMON_ID_TRAINER],10).name
-     #    else
-    #      @newpokes = "None"
-       #  end
-          
-       # }, "fuse all trainer pokemon with the pokemon that has this id, 0 disables this."
-       # )
-        #options << EnumOption.new(_INTL("What part to replace",), [_INTL("Random"), _INTL("Body"),_INTL("Head")],
-        #proc { $game_variables[LOLPY_FUSEMON_CHOICE_ID_TRAINER] },
-        #proc { |value|
-        #$game_variables[LOLPY_FUSEMON_CHOICE_ID_TRAINER]=value
-        #puts value
-     
-       # }, "replace either the body or head with this pokemon."
-       # )
-        return options
-      end
+        $game_switches[SWITCH_LOLPY_CHALLENGES] = value == 0
+      }, "Options for loopy's challenge mods"
+      ),
+     ]
+     return options
+     end
+  def openLoopChallengeOptionsMenu()
+    return if !@openLoopchalOptions
+    pbFadeOutIn {
+      scene = Loopy_Chalmod_OptionsScene.new
+      screen = PokemonOptionScreen.new(scene)
+      screen.pbStartScreen
+    }
+    @openLoopchalOptions = false
+  end
 end
-
-
-
-
 
 class RandomizerWildPokemonOptionsScene < PokemonOption_Scene
     def pbGetOptions(inloadscreen = false)
@@ -171,73 +255,73 @@ class RandomizerWildPokemonOptionsScene < PokemonOption_Scene
                                 }, "Include fused Pokémon in the randomize pool for wild Pokémon"
       )
       
-      @newpokes = "None"
-      options << SliderOption.new(_INTL("Fusing Wild pokemon with",), 0, 470, 1,
-                                      proc { $game_variables[LOLPY_FUSEMON_ID] },
-                                      proc { |value|
-                                      $game_variables[LOLPY_FUSEMON_ID]=value
-                                       if value > 0
-                                         @newpokes = Pokemon.new($game_variables[LOLPY_FUSEMON_ID],10).name
-                                       else
-                                        @newpokes = "None"
-                                       end
-                                        
-                                      }, "fuse all wild pokemon with the pokemon that has this id, 0 disables this."
-                                      )
-      options << EnumOption.new(_INTL("What part to replace",), [_INTL("Random"), _INTL("Body"),_INTL("Head")],
-      proc { $game_variables[LOLPY_FUSEMON_CHOICE_ID] },
-      proc { |value|
-      $game_variables[LOLPY_FUSEMON_CHOICE_ID]=value
-      puts value
-   
-      }, "replace either the body or head with this pokemon."
-      )
       return options
     end
 end
 
-#def Kernel.pbShuffleTrainers(bst_range = 50, customsOnly = false, customsList = nil)
-#    bst_range = pbGet(VAR_RANDOMIZER_TRAINER_BST)
-  
- #   if customsOnly && customsList == nil
-#      customsOnly = false
-  #  end
- #   randomTrainersHash = Hash.new
-  #  trainers_data = GameData::Trainer.list_all
-  #  trainers_array = trainers_data
-  #  trainers_data.each do |key, value|
-   #   trainer = trainers_data[key]
-    #  i = 0
-    #  new_party = []
-      #for poke in trainer.pokemon
-     #   old_poke = GameData::Species.get(poke[:species]).id_number
-     #   new_poke = customsOnly ? getNewCustomSpecies(old_poke, customsList, bst_range) : getNewSpecies(old_poke, bst_range)
-      #  fusepoke_id = $game_variables[LOLPY_FUSEMON_ID_TRAINER]
-    #    if fusepoke_id >= 1
-           # if $game_variables[LOLPY_FUSEMON_CHOICE_ID_TRAINER] == 2
-     #        new_poke = getFusedPokemonIdFromDexNum(getNewSpecies(old_poke, bst_range), fusepoke_head_id)
-            # end
-     #       if $game_variables[LOLPY_FUSEMON_CHOICE_ID_TRAINER] == 1
-          #   new_poke = getFusedPokemonIdFromDexNum(fusepoke_body_id,getNewSpecies(old_poke, bst_range))
-         #    end
-     #       if $game_variables[LOLPY_FUSEMON_CHOICE_ID_TRAINER] == 0
-        #        if rand(1) < 0.5 then
-#
-          #        new_poke = getFusedPokemonIdFromDexNum(getNewSpecies(old_poke, bst_range), fusepoke_id)
-     #           else
-         #         new_poke = getFusedPokemonIdFromDexNum(fusepoke_id,getNewSpecies(old_poke, bst_range))
-   #               end
-       #         end
-  #      new_party << new_poke
-     #    end
-      #randomTrainersHash[trainer.id] = new_party
-      #playShuffleSE(i)
-      #i += 1
-      #if i % 2 == 0
-        #n = (i.to_f / trainers_array.length) * 100
-       # Kernel.pbMessageNoSound(_INTL("\\ts[]Shuffling trainers...\\n {1}%\\^", sprintf('%.2f', n), PBSpecies.maxValue))
-    #  end
-   # end
-  #  $PokemonGlobal.randomTrainersHash = randomTrainersHash
- # end
-#end
+
+
+
+def pbGenerateWildPokemon(species,level,isRoamer=false)
+  newpoke = Pokemon.new(species,10)
+  fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
+  if fusepoke_id >= 1 && !$game_switches[REGULAR_TO_FUSIONS]
+      if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2 && !isFusion(getDexNumberForSpecies(species))
+      species = getSpeciesIdForFusion(getDexNumberForSpecies(species), fusepoke_id)
+       end
+      if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 1 && !isFusion(getDexNumberForSpecies(species))
+      species = getSpeciesIdForFusion(fusepoke_id, getDexNumberForSpecies(species))
+       end
+      if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 0 && !isFusion(getDexNumberForSpecies(species))
+          if rand(1) < 0.5 then
+
+           species = getSpeciesIdForFusion(getDexNumberForSpecies(species), fusepoke_id)
+          else
+           species = getSpeciesIdForFusion(fusepoke_id,getDexNumberForSpecies(species))
+            end
+      end
+    newpoke = Pokemon.new(species,level)
+    puts newpoke.name
+    end
+
+
+  genwildpoke = Pokemon.new(species,level)
+  # Give the wild Pokémon a held item
+  items = genwildpoke.wildHoldItems
+  first_pkmn = $Trainer.first_pokemon
+  chances = [50,5,1]
+  chances = [60,20,5] if first_pkmn && first_pkmn.hasAbility?(:COMPOUNDEYES)
+  itemrnd = rand(100)
+  if (items[0]==items[1] && items[1]==items[2]) || itemrnd<chances[0]
+    genwildpoke.item = items[0]
+  elsif itemrnd<(chances[0]+chances[1])
+    genwildpoke.item = items[1]
+  elsif itemrnd<(chances[0]+chances[1]+chances[2])
+    genwildpoke.item = items[2]
+  end
+  # Shiny Charm makes shiny Pokémon more likely to generate
+  if GameData::Item.exists?(:SHINYCHARM) && $PokemonBag.pbHasItem?(:SHINYCHARM)
+    2.times do   # 3 times as likely
+      break if genwildpoke.shiny?
+      genwildpoke.personalID = rand(2**16) | rand(2**16) << 16
+    end
+  end
+  # Give Pokérus
+  genwildpoke.givePokerus if rand(65536) < Settings::POKERUS_CHANCE
+  # Change wild Pokémon's gender/nature depending on the lead party Pokémon's
+  # ability
+  if first_pkmn
+    if first_pkmn.hasAbility?(:CUTECHARM) && !genwildpoke.singleGendered?
+      if first_pkmn.male?
+        (rand(3)<2) ? genwildpoke.makeFemale : genwildpoke.makeMale
+      elsif first_pkmn.female?
+        (rand(3)<2) ? genwildpoke.makeMale : genwildpoke.makeFemale
+      end
+    elsif first_pkmn.hasAbility?(:SYNCHRONIZE)
+      genwildpoke.nature = first_pkmn.nature if !isRoamer && rand(100)<50
+    end
+  end
+  # Trigger events that may alter the generated Pokémon further
+  Events.onWildPokemonCreate.trigger(nil,genwildpoke)
+  return genwildpoke
+end
