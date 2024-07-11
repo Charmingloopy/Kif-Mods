@@ -403,8 +403,14 @@ def pbGenerateWildPokemon(species,level,isRoamer=false)
             end
         end
     end
-
+    types = [:NORMAL,:FIGHTING,:FLYING,:POISON,:GROUND,:ROCK,:BUG,:GHOST,:STEEL,:FIRE,:WATER,:GRASS,:ELECTRIC,:PSYCHIC,:ICE,:DRAGON,:DARK,:FAIRY]
   genwildpoke = Pokemon.new(species,level)
+  if fusepoke_type > 0
+    if isFusion(getDexNumberForSpecies(species)) and genwildpoke.hasType?(types[fusepoke_type - 1]) == false
+      species = getSpeciesIdForFusion(getHeadID(species,getBodyID(species)),getBodyID(species) )
+      genwildpoke = Pokemon.new(species,level)
+    end
+  end
   # Give the wild Pokémon a held item
   items = genwildpoke.wildHoldItems
   first_pkmn = $Trainer.first_pokemon
