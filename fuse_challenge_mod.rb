@@ -1,3 +1,4 @@
+SWITCH_LOLPY_SHUFFLE = 420
 LOLPY_FUSEMON_TYPE = 421
 SWITCH_LOLPY_CHALLENGES = 422
 LOLPY_FUSEMON_ID_TRAINER = 422
@@ -5,6 +6,7 @@ LOLPY_FUSEMON_CHOICE_ID_TRAINER = 423
 LOLPY_FUSEMON_ID = 424
 LOLPY_FUSEMON_CHOICE_ID = 425
 REGULAR_TO_FUSIONS = 953
+@lolpy_pokelist = get_pokemon_list(false)
 def get_randomized_bst_hash(poke_list, bst_range,show_progress=true,randomize = true)
 
         bst_hash = Hash.new
@@ -19,12 +21,12 @@ def get_randomized_bst_hash(poke_list, bst_range,show_progress=true,randomize = 
           min_bst_allowed=targetStats_min
           if randomize == false
            random_poke = i
-          end
+           end
           #if a match, add to hash, remove from array, && cycle to next poke in dex
           playShuffleSE(i)
           if randomize == true
            random_poke = poke_list.sample
-          end
+           end
           random_poke_bst=getStatsTotal(getBaseStatsFormattedForRandomizer(random_poke))
           
           j=0
@@ -34,56 +36,101 @@ def get_randomized_bst_hash(poke_list, bst_range,show_progress=true,randomize = 
              random_poke_bst=getStatsTotal(getBaseStatsFormattedForRandomizer(random_poke))
             else
               random_poke = i
-            end
-            newpoke = Pokemon.new(i,10)
-            fusepoke_type = $game_variables[LOLPY_FUSEMON_TYPE]
-            fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
-            if fusepoke_type > 0
-              poketype = false
-              tries = 100
-
-              types = [:NORMAL,:FIGHTING,:FLYING,:POISON,:GROUND,:ROCK,:BUG,:GHOST,:STEEL,:FIRE,:WATER,:GRASS,:ELECTRIC,:PSYCHIC,:ICE,:DRAGON,:DARK,:FAIRY]
-              
-              while poketype != true and tries > 0
-                puts types
-                mon = poke_list.sample
-                pokes = Pokemon.new(mon,10)
-                tries -= 1
-                if pokes.hasType?(types[fusepoke_type - 1])
-                  poketype = true
-                  fusepoke_id = mon
-                end
               end
-            end
-                
-            if fusepoke_id >= 1 && !$game_switches[REGULAR_TO_FUSIONS]
-                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2 && !isFusion(i)
-                 random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_id)
-                 end
-                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 1 && !isFusion(i)
-                 random_poke = getFusedPokemonIdFromDexNum(fusepoke_id,random_poke)
-                 end
-                if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 0 && !isFusion(i)
-                    if rand(1) < 0.5 then
+           end
+          newpoke = Pokemon.new(i,10)
+  fusepoke_choice = $game_variables[LOLPY_FUSEMON_CHOICE_ID]
+  fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
+  fusepoke_type = $game_variables[LOLPY_FUSEMON_TYPE]
+  fusepoke_choice = $game_variables[LOLPY_FUSEMON_CHOICE_ID]
+  fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
+  fusepoke_type = $game_variables[LOLPY_FUSEMON_TYPE]
+  if fusepoke_type > 0
+    poketype = false
+    pokemon_amount = NB_POKEMON - 1
 
-                      random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_id)
-                    else
-                      random_poke = getFusedPokemonIdFromDexNum(fusepoke_id,random_poke)
-                      end
+    tries = 0
+    max_tries = rand(rand(80...130)...rand(200...pokemon_amount))
 
-                end
+    types = [:NORMAL,:FIGHTING,:FLYING,:POISON,:GROUND,:ROCK,:BUG,:GHOST,:STEEL,:FIRE,:WATER,:GRASS,:ELECTRIC,:PSYCHIC,:ICE,:DRAGON,:DARK,:FAIRY]
+    selectable_mons = []
+    min_mons = 4
+    while tries < max_tries && selectable_mons.size < min_mons
+      
+      
+      mon_statsTotal = getStatsTotal( getBaseStatsFormattedForRandomizer(species))
+      spec_statsTotal = getStatsTotal( getBaseStatsFormattedForRandomizer(species))
+      tries += 1
+      puts tries
+      mon = tries
+      pokes = Pokemon.new(mon,10)
+      puts pokes.name
+      if fusepoke_choice == 2
+        if pokes.type2 == types[fusepoke_type - 1] && mon_statsTotal <= spec_statsTotal * 1.5
+          poketype = true
+          selectable_mons.push(mon)
+          
+         end
+        end
+      if fusepoke_choice == 1
+          
+          if pokes.type1 == types[fusepoke_type - 1] && mon_statsTotal <= spec_statsTotal * 1.5
+            poketype = true
+            selectable_mons.push(mon)
+            
+           end
+          end
+      if fusepoke_choice == 0
+       if pokes.hasType?(types[fusepoke_type - 1]) && mon_statsTotal <= spec_statsTotal * 1.5
+         poketype = true
+         selectable_mons.push(mon)
+         end
+       end
 
-            j+=1
-            if j % 5 ==0  #to avoid infinite loops if can't find anything
-              min_bst_allowed-=1
-              max_bst_allowed+=1
-              end
+
+      if selectable_mons.size < min_mons && max_tries < pokemon_amount
+        min_mons -= 1
+        max_tries += 1
+      end
+    
+    if selectable_mons.size > 0
+      fusepoke_id = selectable_mons.sample
+     if random_poke == fusepoke_id
+       selectable_mons.delete(random_poke)
+       fusepoke_id = selectable_mons.sample
+       end
+     end
+    puts selectable_mons.inspect
+    end
+          
+
+  if fusepoke_id >= 1 && !$game_switches[REGULAR_TO_FUSIONS]
+    if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2 && !isFusion(random_poke)
+         random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_id)
+         end
+     if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 1 && !isFusion(random_poke)
+         random_poke = getFusedPokemonIdFromDexNum(fusepoke_id,random_poke)
+         end
+    if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 0 && !isFusion(random_poke)
+          if rand(1) < 0.5 then
+
+             random_poke = getFusedPokemonIdFromDexNum(random_poke, fusepoke_id)
+          else
+            random_poke = getFusedPokemonIdFromDexNum(fusepoke_id,random_poke)
             end
           end
-          bst_hash[i] = random_poke
-        end
-        return bst_hash
+    end
+
+  j+=1
+  if j % 5 ==0  #to avoid infinite loops if can't find anything
+      min_bst_allowed-=1
+      max_bst_allowed+=1
       end
+  end
+  bst_hash[i] = random_poke
+ end
+return bst_hash
+end
 
 
 
@@ -194,6 +241,12 @@ class RandomizerOptionsScene < PokemonOption_Scene
       proc { $game_switches[SWITCH_LOLPY_CHALLENGES] ? 0 : 1 },
       proc { |value|
         if !$game_switches[SWITCH_LOLPY_CHALLENGES] && value == 0
+         if !$game_switches[SWITCH_LOLPY_SHUFFLE]
+           @lolpy_pokelist = get_pokemon_list(false)
+           @lolpy_pokelist.shuffle!
+           $game_switches[SWITCH_LOLPY_SHUFFLE] = true
+         end
+
           @openLoopchalOptions = true
           openLoopChallengeOptionsMenu()
         end
@@ -291,35 +344,93 @@ end
 
 
 def pbGenerateWildPokemon(species,level,isRoamer=false)
+  if !$game_switches[SWITCH_LOLPY_SHUFFLE]
+    @lolpy_pokelist = get_pokemon_list(false)
+    @lolpy_pokelist.shuffle!
+    $game_switches[SWITCH_LOLPY_SHUFFLE] = true
+  end
   newpoke = Pokemon.new(species,10)
-  poke_list = get_pokemon_list(false)
+  poke_list = @lolpy_pokelist
+  puts poke_list.inspect
+  fusepoke_choice = $game_variables[LOLPY_FUSEMON_CHOICE_ID]
   fusepoke_id = $game_variables[LOLPY_FUSEMON_ID]
   fusepoke_type = $game_variables[LOLPY_FUSEMON_TYPE]
   if fusepoke_type > 0
     poketype = false
+    pokemon_amount = NB_POKEMON - 1
+    bst_multi = 1
 
-    tries = 100
+    tries = 0
+    #max_tries = rand(rand(150...180)...rand(181...pokemon_amount))
+    max_tries = pokemon_amount
 
     types = [:NORMAL,:FIGHTING,:FLYING,:POISON,:GROUND,:ROCK,:BUG,:GHOST,:STEEL,:FIRE,:WATER,:GRASS,:ELECTRIC,:PSYCHIC,:ICE,:DRAGON,:DARK,:FAIRY]
-    #types.sort! { |a, b| GameData::Type.get(a).id_number <=> GameData::Type.get(b).id_number }
-    puts types.inspect
-    while poketype != true and tries > 0
+    selectable_mons = []
+    min_mons = rand(2,4)
+    if fusepoke_type == 1
+      min_mons = rand(4,6)
+    end
+    if fusepoke_type == 3
+      min_mons = rand(4,6)
+    end
+    if fusepoke_type == 7
+      min_mons = rand(4,6)
+    end
+    if fusepoke_type == 11
+      min_mons = rand(4,6)
+    end
+    while tries < max_tries && selectable_mons.size < min_mons
       
-      mon = poke_list.sample
+      
+      mon_statsTotal = getStatsTotal( getBaseStatsFormattedForRandomizer(species))
+      spec_statsTotal = getStatsTotal( getBaseStatsFormattedForRandomizer(species))
+      
+      puts tries
+      mon = poke_list[tries]
+      tries += 1
       pokes = Pokemon.new(mon,10)
-      tries -= 1
-      if pokes.hasType?(types[fusepoke_type - 1])
-        poketype = true
-        fusepoke_id = mon
+      puts pokes.name
+      if fusepoke_choice == 2
+        if pokes.type2 == types[fusepoke_type - 1] && mon_statsTotal <= spec_statsTotal * bst_multi
+          poketype = true
+          selectable_mons.push(mon)
+          end
         end
+      if fusepoke_choice == 1 
+          if pokes.type1 == types[fusepoke_type - 1] && mon_statsTotal <= spec_statsTotal * bst_multi
+            poketype = true
+            selectable_mons.push(mon)
+            end
+          end
+      if fusepoke_choice == 0
+       if pokes.hasType?(types[fusepoke_type - 1]) && mon_statsTotal <= spec_statsTotal * bst_multi
+         poketype = true
+         selectable_mons.push(mon)
+         end
+       end
+
+
+      if selectable_mons.size < min_mons && selectable_mons.size > 0  
+        bst_multi += 0.01   
+        min_mons -= 1
+        end
+      end
+    
+    if selectable_mons.size > 0
+      fusepoke_id = selectable_mons.sample
+     if species == fusepoke_id
+       selectable_mons.delete(species)
+       fusepoke_id = selectable_mons.sample
+       end
      end
-   end
+    puts selectable_mons.inspect
+    end
   if fusepoke_id >= 1 && !$game_switches[REGULAR_TO_FUSIONS]
       if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 2 && !isFusion(getDexNumberForSpecies(species))
-      species = getSpeciesIdForFusion(getDexNumberForSpecies(species), fusepoke_id)
+       species = getSpeciesIdForFusion(getDexNumberForSpecies(species), fusepoke_id)
        end
       if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 1 && !isFusion(getDexNumberForSpecies(species))
-      species = getSpeciesIdForFusion(fusepoke_id, getDexNumberForSpecies(species))
+       species = getSpeciesIdForFusion(fusepoke_id, getDexNumberForSpecies(species))
        end
       if $game_variables[LOLPY_FUSEMON_CHOICE_ID] == 0 && !isFusion(getDexNumberForSpecies(species))
           if rand(1) < 0.5 then
@@ -328,9 +439,7 @@ def pbGenerateWildPokemon(species,level,isRoamer=false)
           else
            species = getSpeciesIdForFusion(fusepoke_id,getDexNumberForSpecies(species))
             end
-      end
-    newpoke = Pokemon.new(species,level)
-    puts newpoke.name
+        end
     end
 
 
