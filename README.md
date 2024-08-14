@@ -40,6 +40,11 @@ Reworks Stall so that in a addition of the pokemon with this ability always movi
 
 Reworks Rivalry so that if the pokemon shares a type with the target their dmg is multiplied by 1.15 and if they also have the same gender as the target their dmg is multiplied by a total of 1.43 - based on a idea from https://www.reddit.com/r/pokemon/comments/14ug713/what_abilities_would_you_buff_or_change_to_become/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
 
+## Forewarn Rework Mod:
+
+buffs forewarn making the pokemon with the ability evade the first time a forewarned move is used.
+
+Idea from Awec https://discord.com/channels/1121345297352753243/1159235554752331926/1273329520253862013
 ## Anticipation Rework Mod:
 
 Reworks Anticipation making it divide the damage taken from the moves the ability finds by 1.5 based on a idea from [https://www.reddit.com/r/pokemon/comments/14ug713/what_abilities_would_you_buff_or_change_to_become/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button](https://www.reddit.com/r/pokemon/comments/2o1ni1/moves_that_should_be_buffed/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
