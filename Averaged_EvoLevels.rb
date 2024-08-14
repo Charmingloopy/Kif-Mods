@@ -30,6 +30,7 @@ class Pokemon
     if @head_data == nil then
       @head_data = get_head_data
       end
+    echoln @head_data
     if @head_data and @body_data then
       if @head_data[2] < @body_data[2] - 5 or @head_data[2] > @body_data[2] + 4 then
         levelpercent = 0.05
@@ -62,7 +63,8 @@ class Pokemon
      if @body_data == nil then
         @body_data = get_body_data
         end
-
+     return nil if @body_data[2].is_a?(Symbol)
+     return nil if @head_data[2].is_a?(Symbol)
      body_evolution = check_evolution_internal(@species_data.body_pokemon) { |pkmn, new_species, method, parameter|
         success = GameData::Evolution.get(method).call_level_up(pkmn, parameter)
         next (success) ? new_species : nil
